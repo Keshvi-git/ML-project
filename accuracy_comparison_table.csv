@@ -1,0 +1,7 @@
+Algorithm,Case1_TestSize_0.1,Case1_TestSize_0.2,Case1_TestSize_0.3,Case1_TestSize_0.4,Case2_CV_Mean,Case2_CV_Std,Case3_Best_Accuracy
+Logistic Regression,0.7299,0.7257,0.7256,0.7259,0.7245,0.0035,0.7247
+KNN,0.6887,0.6892,0.69,0.6897,0.6895,0.0026,0.6966
+Decision Tree,0.6186,0.6144,0.6133,0.619,0.6165,0.0034,0.7283
+Random Forest,0.6942,0.6908,0.6942,0.6968,0.6939,0.004,0.7307
+Gradient Boosting,0.7377,0.7328,0.7311,0.7327,0.7308,0.0031,0.7312
+Naive Bayes,0.7182,0.7153,0.7102,0.7094,0.7111,0.0039,0.7111

@@ -329,6 +329,7 @@
                 <a href="#home" class="nav-link active" onclick="showSection('home', this)">Home</a>
                 <a href="#predict" class="nav-link" onclick="showSection('predict', this)">Predict Now</a>
                 <a href="#graphs" class="nav-link" onclick="showSection('graphs', this)">Graphs</a>
+                <a href="/metrics" class="nav-link">📊 All Metrics</a>
                 <a href="#model" class="nav-link" onclick="showSection('model', this)">Model Details</a>
                 <a href="#disclaimer" class="nav-link" onclick="showSection('disclaimer', this)">Disclaimer</a>
             </div>
@@ -464,13 +465,65 @@
     
     <!-- Graphs Section -->
     <section id="graphs" class="content-section hidden">
-        <h2 class="section-title">📊 Performance Graphs</h2>
+        <!-- <h2 class="section-title">📊 Performance Graphs</h2>
         <div style="text-align: center; margin-bottom: 30px;">
-            <a href="/metrics" class="btn-primary" style="text-decoration: none;">View All Graphs on Full Page</a>
-        </div>
-        <div id="graphsContainer">
-            <div style="text-align: center; padding: 40px; color: #666;">
-                <p>Click the button above to view detailed performance graphs</p>
+            <a href="/metrics" class="btn-primary" style="text-decoration: none; display: inline-block; margin: 10px;">
+                📊 View All Model Performance Graphs
+            </a>
+        </div> -->
+        
+        <!-- Algorithm Comparison Section -->
+        <div style="margin-top: 40px; padding-top: 30px; border-top: 3px solid #d32f2f;">
+            <h3 style="color: #d32f2f; font-size: 1.8em; margin-bottom: 30px; text-align: center;">
+                📊 Algorithm Comparison (All 6 Algorithms)
+            </h3>
+            
+            <div style="text-align: center; padding: 20px; color: #666;" id="comparisonLoadingHome">
+                Loading algorithm comparison...
+            </div>
+            
+            <div id="comparisonGraphsContainerHome" style="display: none;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div style="background: #fafafa; padding: 15px; border-radius: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                        <h3 style="color: #d32f2f; margin-bottom: 12px; text-align: center; font-size: 1.1em;">Case 1: Train-Test Split</h3>
+                        <img id="case1Home" alt="Case 1" style="width: 100%; height: auto; border-radius: 8px;">
+                    </div>
+                    
+                    <div style="background: #fafafa; padding: 15px; border-radius: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                        <h3 style="color: #d32f2f; margin-bottom: 12px; text-align: center; font-size: 1.1em;">Case 2: Cross-Validation</h3>
+                        <img id="case2Home" alt="Case 2" style="width: 100%; height: auto; border-radius: 8px;">
+                    </div>
+                </div>
+                
+                <div style="background: #fafafa; padding: 15px; border-radius: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); margin-bottom: 30px;">
+                    <h3 style="color: #d32f2f; margin-bottom: 12px; text-align: center; font-size: 1.1em;">Case 3: Hyperparameter Tuning</h3>
+                    <img id="case3Home" alt="Case 3" style="width: 100%; height: auto; border-radius: 8px;">
+                </div>
+            </div>
+            
+            <!-- Comparison Table -->
+            <div id="comparisonTableContainerHome" style="margin-top: 40px; display: none;">
+                <h3 style="color: #d32f2f; text-align: center; margin-bottom: 20px; font-size: 1.5em;">
+                    📋 Accuracy Comparison Table
+                </h3>
+                <div style="overflow-x: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                    <table id="comparisonTableHome" style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                        <thead>
+                            <tr style="background: #d32f2f; color: white;">
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Algorithm</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 1: Test Size 0.1</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 1: Test Size 0.2</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 1: Test Size 0.3</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 1: Test Size 0.4</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 2: CV Mean</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 2: CV Std</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 3: Best Accuracy</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonTableBodyHome">
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </section>
@@ -559,6 +612,96 @@
             
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Load graphs if graphs section is shown
+            if (sectionId === 'graphs') {
+                loadComparisonGraphsHome();
+            }
+        }
+        
+        // Load comparison graphs for home page
+        async function loadComparisonGraphsHome() {
+            try {
+                const loadingDiv = document.getElementById('comparisonLoadingHome');
+                if (!loadingDiv) return;
+                
+                loadingDiv.textContent = 'Loading algorithm comparison...';
+                loadingDiv.style.display = 'block';
+                
+                const response = await fetch('/api/comparison-graphs');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Load graphs
+                if (data.graphs) {
+                    if (data.graphs.case1) {
+                        const img = document.getElementById('case1Home');
+                        if (img) img.src = 'data:image/png;base64,' + data.graphs.case1;
+                    }
+                    if (data.graphs.case2) {
+                        const img = document.getElementById('case2Home');
+                        if (img) img.src = 'data:image/png;base64,' + data.graphs.case2;
+                    }
+                    if (data.graphs.case3) {
+                        const img = document.getElementById('case3Home');
+                        if (img) img.src = 'data:image/png;base64,' + data.graphs.case3;
+                    }
+                }
+                
+                // Load table
+                if (data.table && data.table.length > 0) {
+                    const tbody = document.getElementById('comparisonTableBodyHome');
+                    if (tbody) {
+                        tbody.innerHTML = '';
+                        
+                        data.table.forEach(row => {
+                            const tr = document.createElement('tr');
+                            tr.style.borderBottom = '1px solid #ddd';
+                            const formatValue = (val) => {
+                                if (val === null || val === undefined || isNaN(val)) return 'N/A';
+                                return Number(val).toFixed(4);
+                            };
+                            tr.innerHTML = 
+                                '<td style="padding: 10px; font-weight: 600; border: 1px solid #ddd;">' + (row.Algorithm || 'N/A') + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' + formatValue(row['Case1_TestSize_0.1']) + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' + formatValue(row['Case1_TestSize_0.2']) + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' + formatValue(row['Case1_TestSize_0.3']) + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' + formatValue(row['Case1_TestSize_0.4']) + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' + formatValue(row['Case2_CV_Mean']) + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' + formatValue(row['Case2_CV_Std']) + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd; font-weight: 600; color: #d32f2f;">' + formatValue(row['Case3_Best_Accuracy']) + '</td>';
+                            tbody.appendChild(tr);
+                        });
+                        
+                        const container = document.getElementById('comparisonTableContainerHome');
+                        if (container) container.style.display = 'block';
+                    }
+                }
+                
+                if (loadingDiv) loadingDiv.style.display = 'none';
+                const container = document.getElementById('comparisonGraphsContainerHome');
+                if (container) container.style.display = 'block';
+            } catch (error) {
+                console.error('Error loading comparison graphs:', error);
+                const loadingDiv = document.getElementById('comparisonLoadingHome');
+                if (loadingDiv) {
+                    loadingDiv.textContent = 'Error loading comparison: ' + error.message;
+                    loadingDiv.style.color = '#d32f2f';
+                }
+                // Still try to show table if data exists
+                if (data && data.table && data.table.length > 0) {
+                    const tableContainer = document.getElementById('comparisonTableContainerHome');
+                    if (tableContainer) tableContainer.style.display = 'block';
+                }
+            }
         }
         
         // Prediction Form Handler

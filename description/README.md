@@ -138,11 +138,4 @@ Open your browser and visit: `http://localhost:5000`
 - If prediction fails, ensure all form fields are filled correctly
 - For deployment issues, check that `PORT` environment variable is set correctly
 
-## 👤 Author
-
-Created as part of Machine Learning project
-
----
-
-**Enjoy exploring the performance metrics and making predictions! 🎉**
 

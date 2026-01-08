@@ -203,7 +203,7 @@
         
         <div class="loading" id="loading">Loading graphs...</div>
         
-        <div class="graphs-container" id="graphsContainer" style="display: none;">
+        <div class="graphs-container" id="graphsContainer" style="display: none !important;">
             <div class="graph-box">
                 <h2>Confusion Matrix</h2>
                 <img id="confusion_matrix" alt="Confusion Matrix">
@@ -239,6 +239,57 @@
                 <img id="class_report" alt="Classification Report">
             </div>
         </div>
+        
+        <!-- Algorithm Comparison Section -->
+        <!-- <div style="margin-top: 50px; padding-top: 40px; border-top: 3px solid #7b1fa2;">
+            <h2 class="section-title" style="color: #7b1fa2; font-size: 2em; margin-bottom: 30px; text-align: center;">
+                📊 Algorithm Comparison (All 6 Algorithms)
+            </h2>
+            
+            <div class="loading" id="comparisonLoading">Loading comparison graphs...</div>
+            
+            <div class="graphs-container" id="comparisonGraphsContainer" style="display: none;">
+                <div class="graph-box">
+                    <h2>Case 1: Train-Test Split Comparison</h2>
+                    <img id="case1" alt="Case 1: Train-Test Split">
+                </div>
+                
+                <div class="graph-box">
+                    <h2>Case 2: Cross-Validation Comparison</h2>
+                    <img id="case2" alt="Case 2: Cross-Validation">
+                </div>
+                
+                <div class="graph-box full-width">
+                    <h2>Case 3: Hyperparameter Tuning</h2>
+                    <img id="case3" alt="Case 3: Hyperparameter Tuning">
+                </div>
+            </div>
+             -->
+            <!-- Comparison Table -->
+            <!-- <div id="comparisonTableContainer" style="margin-top: 40px; display: none;">
+                <h3 style="color: #7b1fa2; text-align: center; margin-bottom: 20px; font-size: 1.5em;">
+                    📋 Accuracy Comparison Table
+                </h3>
+                <div style="overflow-x: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                    <table id="comparisonTable" style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                        <thead>
+                            <tr style="background: #7b1fa2; color: white;">
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Algorithm</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 1: Test Size 0.1</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 1: Test Size 0.2</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 1: Test Size 0.3</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 1: Test Size 0.4</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 2: CV Mean</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 2: CV Std</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Case 3: Best Accuracy</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div> -->
     </div>
     
     <script>
@@ -277,6 +328,7 @@
                 }
                 
                 // Update graphs
+                console.log('Loading graphs:', Object.keys(data.graphs));
                 for (const [key, value] of Object.entries(data.graphs)) {
                     const img = document.getElementById(key);
                     if (img && value) {
@@ -284,13 +336,24 @@
                         img.onerror = function() {
                             console.error('Error loading image:', key);
                         };
+                        img.onload = function() {
+                            console.log('Graph loaded:', key);
+                        };
+                    } else {
+                        console.warn('Graph element not found or no data for:', key, 'img:', img, 'value:', value ? 'exists' : 'missing');
                     }
                 }
                 
+                // Hide loading and show graphs container
                 loadingDiv.style.display = 'none';
                 const graphsContainer = document.getElementById('graphsContainer');
                 if (graphsContainer) {
-                    graphsContainer.style.display = 'block';
+                    // Remove inline style to let CSS take over
+                    graphsContainer.removeAttribute('style');
+                    graphsContainer.classList.add('visible');
+                    console.log('Graphs container displayed');
+                } else {
+                    console.error('Graphs container element not found!');
                 }
             } catch (error) {
                 console.error('Error loading graphs:', error);
@@ -308,6 +371,102 @@
         } else {
             loadGraphs();
         }
+        
+        // Load comparison graphs
+        async function loadComparisonGraphs() {
+            try {
+                const loadingDiv = document.getElementById('comparisonLoading');
+                if (!loadingDiv) return;
+                
+                loadingDiv.textContent = 'Loading algorithm comparison...';
+                
+                const response = await fetch('/api/comparison-graphs');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Load graphs
+                if (data.graphs) {
+                    if (data.graphs.case1) {
+                        const img = document.getElementById('case1');
+                        if (img) img.src = 'data:image/png;base64,' + data.graphs.case1;
+                    }
+                    if (data.graphs.case2) {
+                        const img = document.getElementById('case2');
+                        if (img) img.src = 'data:image/png;base64,' + data.graphs.case2;
+                    }
+                    if (data.graphs.case3) {
+                        const img = document.getElementById('case3');
+                        if (img) img.src = 'data:image/png;base64,' + data.graphs.case3;
+                    }
+                }
+                
+                // Load table
+                console.log('Table data:', data.table);
+                if (data.table && data.table.length > 0) {
+                    const tbody = document.getElementById('comparisonTableBody');
+                    if (tbody) {
+                        tbody.innerHTML = '';
+                        
+                        data.table.forEach(row => {
+                            const tr = document.createElement('tr');
+                            tr.style.borderBottom = '1px solid #ddd';
+                            // Use bracket notation for keys with dots and handle null values
+                            const formatValue = (val) => {
+                                if (val === null || val === undefined || isNaN(val)) return 'N/A';
+                                return Number(val).toFixed(4);
+                            };
+                            tr.innerHTML = 
+                                '<td style="padding: 10px; font-weight: 600; border: 1px solid #ddd;">' + (row.Algorithm || 'N/A') + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' + formatValue(row['Case1_TestSize_0.1']) + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' + formatValue(row['Case1_TestSize_0.2']) + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' + formatValue(row['Case1_TestSize_0.3']) + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' + formatValue(row['Case1_TestSize_0.4']) + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' + formatValue(row['Case2_CV_Mean']) + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' + formatValue(row['Case2_CV_Std']) + '</td>' +
+                                '<td style="padding: 10px; text-align: center; border: 1px solid #ddd; font-weight: 600; color: #7b1fa2;">' + formatValue(row['Case3_Best_Accuracy']) + '</td>';
+                            tbody.appendChild(tr);
+                        });
+                        
+                        const container = document.getElementById('comparisonTableContainer');
+                        if (container) {
+                            container.style.display = 'block';
+                            console.log('Table container displayed');
+                        }
+                    } else {
+                        console.error('Table body element not found');
+                    }
+                } else {
+                    console.warn('No table data received or empty table:', data.table);
+                }
+                
+                if (loadingDiv) loadingDiv.style.display = 'none';
+                const container = document.getElementById('comparisonGraphsContainer');
+                if (container) container.style.display = 'grid';
+            } catch (error) {
+                console.error('Error loading comparison graphs:', error);
+                const loadingDiv = document.getElementById('comparisonLoading');
+                if (loadingDiv) {
+                    loadingDiv.textContent = 'Error loading comparison: ' + error.message;
+                    loadingDiv.style.color = '#d32f2f';
+                }
+                // Still try to show table container even if graphs fail
+                const tableContainer = document.getElementById('comparisonTableContainer');
+                if (tableContainer && data && data.table && data.table.length > 0) {
+                    tableContainer.style.display = 'block';
+                }
+            }
+        }
+        
+        // Load comparison graphs after main graphs (with delay)
+        setTimeout(loadComparisonGraphs, 1500);
     </script>
 </body>
 </html>
